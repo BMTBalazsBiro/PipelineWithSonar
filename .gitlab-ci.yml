@@ -76,7 +76,7 @@ PROD_Deploy:
   script:
     - echo $sfdx_auth_url > env.sfdx
     - sfdx force:auth:sfdxurl:store --sfdxurlfile env.sfdx --setdefaultusername
-    - commitHash=$(sfdx data:get:record --sobject GitlabSettings__c --where "IsDeleted=false" --json | jq -r '.result.CommitHash__c')
+    - commitHash=$(sfdx data:get:record --sobject GitlabSettings__c --where "IsDeleted=false" --json | jq --raw-output '.result.CommitHash__c')
     - |
       if [ "$commitHash" == null ]; then
         oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
