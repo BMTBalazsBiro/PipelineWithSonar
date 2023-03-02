@@ -1,0 +1,118 @@
+default:
+  image: balazsbiro/sfdx-cli-gitlab:latest
+
+stages:
+  - validation
+  - deploy
+
+DEV_Validation:
+  extends: .validation-template
+  variables:
+    sfdx_auth_url: $SFDX_AUTH_URL_DEV
+  only:
+    refs:
+      - dev
+  allow_failure: false
+
+DEV_Deploy:
+  extends: .quick-deploy-template
+  variables:
+    sfdx_auth_url: $SFDX_AUTH_URL_DEV
+  only:
+    refs:
+      - dev
+  allow_failure: false
+  when: manual
+  needs:
+    - job: DEV_Validation
+      artifacts: true
+
+UAT_Validation:
+  extends: .validation-template
+  variables:
+    sfdx_auth_url: $SFDX_AUTH_URL_UAT
+  only:
+    refs:
+      - uat
+  allow_failure: false
+
+UAT_Deploy:
+  extends: .quick-deploy-template
+  variables:
+    sfdx_auth_url: $SFDX_AUTH_URL_UAT
+  only:
+    refs:
+      - uat
+  allow_failure: false
+  when: manual
+  needs:
+    - job: UAT_Validation
+      artifacts: true
+
+PROD_Validation:
+  extends: .validation-template
+  variables:
+    sfdx_auth_url: $SFDX_AUTH_URL_PROD
+  only:
+    refs:
+      - main
+  allow_failure: false
+
+PROD_Deploy:
+  extends: .quick-deploy-template
+  variables:
+    sfdx_auth_url: $SFDX_AUTH_URL_PROD
+  only:
+    refs:
+      - main
+  allow_failure: false
+  when: manual
+  needs:
+    - job: PROD_Validation
+      artifacts: true
+
+.validation-template:
+  stage: validation
+  script:
+    - echo $sfdx_auth_url > env.sfdx
+    - sfdx force:auth:sfdxurl:store --sfdxurlfile env.sfdx --setdefaultusername
+    - commitHash=$(sfdx data:get:record --sobject GitlabSettings__c --where "IsDeleted=false" --json | jq -r '.result.CommitHash__c')
+    - |
+      if [ "$commitHash" == null ]; then
+        oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
+        commitHash=$oldestCommit
+      fi
+    - echo Compare from commitHash $commitHash
+    - sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $commitHash --output .
+    - |
+      if grep -q '<types>' ./package/package.xml ; then
+        resultId=$(sfdx force:source:deploy \
+          --manifest package/package.xml \
+          --postdestructivechanges destructiveChanges/destructiveChanges.xml \
+          --checkonly \
+          --testlevel RunLocalTests \
+          --wait 0 \
+          --json | jq --raw-output '.result.id')
+        sfdx force:source:deploy:report --verbose --jobid $resultId
+        echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
+        echo "---- Validation Successful ----"
+      else
+        echo "---- No changes to deploy ----"
+      fi
+  artifacts:
+    paths:
+      - VALIDATED_DEPLOY_REQUEST_ID.txt
+
+.quick-deploy-template:
+  stage: deploy
+  script:
+    - echo $sfdx_auth_url > env.sfdx
+    - sfdx force:auth:sfdxurl:store --sfdxurlfile env.sfdx --setdefaultusername
+    - |
+      if [ -s "VALIDATED_DEPLOY_REQUEST_ID.txt" ]; then
+        validatedDeployRequestId=$(cat VALIDATED_DEPLOY_REQUEST_ID.txt)
+        sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
+        sfdx data:update:record --sobject GitlabSettings__c --values "CommitHash__c=$CI_COMMIT_SHA" --where "IsDeleted=false"
+      else
+        echo "---- No validated deploy request id found in the VALIDATED_DEPLOY_REQUEST_ID.txt artifact ----"
+      fi
