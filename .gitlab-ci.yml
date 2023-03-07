@@ -4,88 +4,75 @@ default:
 stages:
   - validation
   - deploy
+  - tagging
 
-DEV_Validation:
+Validation:
   extends: .validation-template
-  variables:
-    sfdx_auth_url: $SFDX_AUTH_URL_DEV
   only:
+    variables:
+      - $CI_COMMIT_TAG == null
     refs:
+      - main
+      - uat
       - dev
   allow_failure: false
 
-DEV_Deploy:
+Deploy:
   extends: .quick-deploy-template
-  variables:
-    sfdx_auth_url: $SFDX_AUTH_URL_DEV
   only:
+    variables:
+      - $CI_COMMIT_TAG == null
     refs:
+      - main
+      - uat
       - dev
   allow_failure: false
   when: manual
   needs:
-    - job: DEV_Validation
+    - job: Validation
       artifacts: true
 
-UAT_Validation:
-  extends: .validation-template
-  variables:
-    sfdx_auth_url: $SFDX_AUTH_URL_UAT
+Tagging:
+  stage: tagging
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  script:
+    - echo "---- Running the tagging job ----"
+  release:
+    tag_name: ${CI_COMMIT_BRANCH}_deploy_${CI_COMMIT_SHA}
+    name: ${CI_COMMIT_BRANCH}_deploy_${CI_COMMIT_SHA}
+    description: 'Successful Deploy'
   only:
-    refs:
-      - uat
-  allow_failure: false
-
-UAT_Deploy:
-  extends: .quick-deploy-template
-  variables:
-    sfdx_auth_url: $SFDX_AUTH_URL_UAT
-  only:
-    refs:
-      - uat
-  allow_failure: false
-  when: manual
-  needs:
-    - job: UAT_Validation
-      artifacts: true
-
-PROD_Validation:
-  extends: .validation-template
-  variables:
-    sfdx_auth_url: $SFDX_AUTH_URL_PROD
-  only:
+    variables:
+      - $CI_COMMIT_TAG == null
     refs:
       - main
-  allow_failure: false
-
-PROD_Deploy:
-  extends: .quick-deploy-template
-  variables:
-    sfdx_auth_url: $SFDX_AUTH_URL_PROD
-  only:
-    refs:
-      - main
-  allow_failure: false
-  when: manual
-  needs:
-    - job: PROD_Validation
-      artifacts: true
+      - uat
+      - dev
 
 .validation-template:
   stage: validation
   script:
-    - echo $sfdx_auth_url > env.sfdx
-    - sfdx force:auth:sfdxurl:store --sfdxurlfile env.sfdx --setdefaultusername
-    - commitHash=$(sfdx data:get:record --sobject GitlabSettings__c --where "IsDeleted=false" --json | jq --raw-output '.result.CommitHash__c')
+    - lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*" $(git rev-list --tags --max-count=1)) || true
     - |
-      if [ "$commitHash" == null ]; then
+      if [ -z "$lastTag" ]; then
         oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
-        commitHash=$oldestCommit
+        lastCommit=$oldestCommit
+      else
+        lastCommit=$(git rev-list -n 1 $lastTag)
       fi
-    - echo Compare from commitHash $commitHash
-    - sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $commitHash --output .
+    - echo Compare from commitHash $lastCommit
+    - sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output .
     - |
       if grep -q '<types>' ./package/package.xml ; then
+        sfdx_auth_url=SFDX_AUTH_URL_${CI_COMMIT_BRANCH^^}
+        sfdx_auth_url_value=${!sfdx_auth_url}
+        if [ -z "$sfdx_auth_url_value" ]; then
+          echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
+          exit 1
+        fi
+        echo sfdx_auth_url $sfdx_auth_url_value
+        echo $sfdx_auth_url_value > env.sfdx
+        sfdx force:auth:sfdxurl:store --sfdxurlfile env.sfdx --setdefaultusername
         resultId=$(sfdx force:source:deploy \
           --manifest package/package.xml \
           --postdestructivechanges destructiveChanges/destructiveChanges.xml \
@@ -106,13 +93,20 @@ PROD_Deploy:
 .quick-deploy-template:
   stage: deploy
   script:
-    - echo $sfdx_auth_url > env.sfdx
+    - sfdx_auth_url=SFDX_AUTH_URL_${CI_COMMIT_BRANCH^^}
+    - sfdx_auth_url_value=${!sfdx_auth_url}
+    - |
+      if [ -z "$sfdx_auth_url_value" ]; then
+        echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
+        exit 1
+      fi
+    - echo sfdx_auth_url $sfdx_auth_url_value
+    - echo $sfdx_auth_url_value > env.sfdx
     - sfdx force:auth:sfdxurl:store --sfdxurlfile env.sfdx --setdefaultusername
     - |
       if [ -s "VALIDATED_DEPLOY_REQUEST_ID.txt" ]; then
         validatedDeployRequestId=$(cat VALIDATED_DEPLOY_REQUEST_ID.txt)
         sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
-        sfdx data:update:record --sobject GitlabSettings__c --values "CommitHash__c=$CI_COMMIT_SHA" --where "IsDeleted=false"
       else
         echo "---- No validated deploy request id found in the VALIDATED_DEPLOY_REQUEST_ID.txt artifact ----"
       fi
