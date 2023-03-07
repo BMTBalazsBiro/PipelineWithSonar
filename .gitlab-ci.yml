@@ -1,5 +1,5 @@
 default:
-  image: balazsbiro/sfdx-cli-gitlab:latest
+  image: bitmist/cicd:latest
 
 stages:
   - validation
