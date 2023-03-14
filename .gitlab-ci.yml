@@ -52,7 +52,7 @@ Tagging:
 .validation-template:
   stage: validation
   script:
-    - lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*" $(git rev-list --tags --max-count=1)) || true
+    - lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
     - |
       if [ -z "$lastTag" ]; then
         oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
