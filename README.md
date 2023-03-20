@@ -33,27 +33,9 @@ How to setup pipeline:
 
     1.  Retrieve source from 'prod' org
 
-    2.  Commit source to 'local/main'
+    2.  Commit and push source to 'local/main'
 
-    3.  Create Custom Setting in the target org:
-
-        1.  Label: 'GitlabSettings'
-
-        2.  API name: 'GitlabSettings__c'
-
-        3.  Create a new field on this custom setting
-
-            1.  Label: 'CommitHash'
-
-            2.  API name: 'CommitHash__c'
-
-        4.  Optional:\
-            Add Default Organization Level Value and set 'CommitHash__c' with the last commit's hash from your 'local/main' branch\
-            It's useful if you don't want to redeploy everything later on the first push in the next step
-
-    4.  Push 'local/main' to remote
-
-    5.  Do these steps above for 'uat', 'dev' branches with the corresponding target orgs as well
+    3.  Do these steps above for 'uat', 'dev' branches with the corresponding target orgs as well
 
 5.  **Protect branches in GitLab → Project → Settings → Repository → Protected branches**
 
@@ -76,7 +58,7 @@ Considerations:
 
     -   By default it's: **20**
 
-    -   You might need to increase this number, if the 'CommitHash' found in the org's custom setting is 'too old'. It can happen, when you merge 'too many' commits to the target branch, and the pipeline fails, so the last successfully deployed commit hash is not updated in the target org
+    -   You might need to increase this number, the last tagged commit 'too old'. It can happen, when you merge 'too many' commits to the target branch, without deployment.
 
 Resources:
 ==========
