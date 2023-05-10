@@ -11,7 +11,7 @@ How to setup pipeline:
 
     1.  Create a variable for each target org:
 
-        1.  SFDX_AUTH_URL_PROD
+        1.  SFDX_AUTH_URL_MAIN
 
         2.  SFDX_AUTH_URL_UAT
 
