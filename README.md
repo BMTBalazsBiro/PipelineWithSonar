@@ -21,9 +21,9 @@ How to setup pipeline:
 
         1.  If possible create a separate user for the Deployment
 
-        2.  Run sfdx auth:web:login --setalias my-org
-
-        3.  Run sfdx force:org:display --verbose -u my-org
+        2.  Run sfdx org:login:web -a my-org
+        
+        3.  Run sfdx org:display --verbose -o my-org
 
         4.  Find the 'Sfdx Auth Url' key in the response
 
