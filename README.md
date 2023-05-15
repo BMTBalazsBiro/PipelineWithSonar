@@ -9,7 +9,7 @@ Our pipeline implementation:
 Docker Image:
 -------------
 
--   [![]()Docker](https://hub.docker.com/repository/docker/bitmist/cicd/general)
+-   <https://hub.docker.com/repository/docker/bitmist/cicd/general>
 
 How to setup pipeline:
 ----------------------
@@ -34,9 +34,9 @@ How to setup pipeline:
 
         1.  If possible create a separate user for the Deployment
 
-        2.  Run `sfdx org:login:web -a my-org`
+        2.  Run sfdx org:login:web -a my-org
 
-        3.  Run `sfdx org:display --verbose -o my-org`
+        3.  Run sfdx org:display --verbose -o my-org
 
         4.  Find the 'Sfdx Auth Url' key in the response
 
@@ -76,10 +76,10 @@ Considerations:
 Resources:
 ----------
 
--   [![]()Build Your Own CI/CD Pipeline in Salesforce (Using GitHub Actions) | Salesforce Ben](https://www.salesforceben.com/build-your-own-ci-cd-pipeline-in-salesforce-using-github-actions/)
+-   <https://www.salesforceben.com/build-your-own-ci-cd-pipeline-in-salesforce-using-github-actions/>
 
--   [![])GitHub - scolladon/sfdx-git-delta: Generate the sfdx content in source format from two git commits](https://github.com/scolladon/sfdx-git-delta)
+-   <https://github.com/scolladon/sfdx-git-delta>
 
--   [![]()GitHub - mehdisfdc/sfdx-cli-gitlab: Lightweight Docker image for CI with Salesforce DX, optimized for use with GitLab CI](https://github.com/mehdisfdc/sfdx-cli-gitlab)
+-   <https://github.com/mehdisfdc/sfdx-cli-gitlab>
 
--   [![](https://developer.salesforce.com/1/unknown/immutable/s/16838461470000000/app/theme/dist/assets/images/favicon.ico)Salesforce Developers](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference_top.htm)
+-   <https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference_top.htm>
