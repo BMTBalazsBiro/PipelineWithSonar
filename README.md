@@ -9,7 +9,7 @@ Our pipeline implementation:
 Docker Image:
 -------------
 
--   [![](https://hub.docker.com/favicon.ico)Docker](https://hub.docker.com/repository/docker/bitmist/cicd/general)
+-   [![]()Docker](https://hub.docker.com/repository/docker/bitmist/cicd/general)
 
 How to setup pipeline:
 ----------------------
@@ -76,10 +76,10 @@ Considerations:
 Resources:
 ----------
 
--   [![](https://www.salesforceben.com/wp-content/uploads/2022/07/cropped-sfb-favicon-32x32.png)Build Your Own CI/CD Pipeline in Salesforce (Using GitHub Actions) | Salesforce Ben](https://www.salesforceben.com/build-your-own-ci-cd-pipeline-in-salesforce-using-github-actions/)
+-   [![]()Build Your Own CI/CD Pipeline in Salesforce (Using GitHub Actions) | Salesforce Ben](https://www.salesforceben.com/build-your-own-ci-cd-pipeline-in-salesforce-using-github-actions/)
 
--   [![](https://github.com/fluidicon.png)GitHub - scolladon/sfdx-git-delta: Generate the sfdx content in source format from two git commits](https://github.com/scolladon/sfdx-git-delta)
+-   [![])GitHub - scolladon/sfdx-git-delta: Generate the sfdx content in source format from two git commits](https://github.com/scolladon/sfdx-git-delta)
 
--   [![](https://github.com/fluidicon.png)GitHub - mehdisfdc/sfdx-cli-gitlab: Lightweight Docker image for CI with Salesforce DX, optimized for use with GitLab CI](https://github.com/mehdisfdc/sfdx-cli-gitlab)
+-   [![]()GitHub - mehdisfdc/sfdx-cli-gitlab: Lightweight Docker image for CI with Salesforce DX, optimized for use with GitLab CI](https://github.com/mehdisfdc/sfdx-cli-gitlab)
 
 -   [![](https://developer.salesforce.com/1/unknown/immutable/s/16838461470000000/app/theme/dist/assets/images/favicon.ico)Salesforce Developers](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference_top.htm)
