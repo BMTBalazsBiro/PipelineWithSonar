@@ -1,5 +1,18 @@
+Org Development Model
+=====================
+
+Our pipeline implementation:
+----------------------------
+
+-   <https://gitlab.com/bitmist/bmt/gitlabpipeline>
+
+Docker Image:
+-------------
+
+-   [![](https://hub.docker.com/favicon.ico)Docker](https://hub.docker.com/repository/docker/bitmist/cicd/general)
+
 How to setup pipeline:
-======================
+----------------------
 
 1.  **Clone the repository**
 
@@ -21,9 +34,9 @@ How to setup pipeline:
 
         1.  If possible create a separate user for the Deployment
 
-        2.  Run sfdx org:login:web -a my-org
-        
-        3.  Run sfdx org:display --verbose -o my-org
+        2.  Run `sfdx org:login:web -a my-org`
+
+        3.  Run `sfdx org:display --verbose -o my-org`
 
         4.  Find the 'Sfdx Auth Url' key in the response
 
@@ -48,7 +61,7 @@ How to setup pipeline:
         3.  'dev'
 
 Considerations:
-===============
+---------------
 
 -   If your GitLab CI/CD **variables are protected**, then **make sure that your branches are protected**  as well, because: "Protected variables only exposed to protected branches or protected tags."
 
@@ -61,10 +74,12 @@ Considerations:
     -   You might need to increase this number, the last tagged commit 'too old'. It can happen, when you merge 'too many' commits to the target branch, without deployment.
 
 Resources:
-==========
+----------
 
--   <https://www.salesforceben.com/build-your-own-ci-cd-pipeline-in-salesforce-using-github-actions/>
+-   [![](https://www.salesforceben.com/wp-content/uploads/2022/07/cropped-sfb-favicon-32x32.png)Build Your Own CI/CD Pipeline in Salesforce (Using GitHub Actions) | Salesforce Ben](https://www.salesforceben.com/build-your-own-ci-cd-pipeline-in-salesforce-using-github-actions/)
 
--   <https://github.com/scolladon/sfdx-git-delta>
+-   [![](https://github.com/fluidicon.png)GitHub - scolladon/sfdx-git-delta: Generate the sfdx content in source format from two git commits](https://github.com/scolladon/sfdx-git-delta)
 
--   <https://github.com/mehdisfdc/sfdx-cli-gitlab>
+-   [![](https://github.com/fluidicon.png)GitHub - mehdisfdc/sfdx-cli-gitlab: Lightweight Docker image for CI with Salesforce DX, optimized for use with GitLab CI](https://github.com/mehdisfdc/sfdx-cli-gitlab)
+
+-   [![](https://developer.salesforce.com/1/unknown/immutable/s/16838461470000000/app/theme/dist/assets/images/favicon.ico)Salesforce Developers](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference_top.htm)
