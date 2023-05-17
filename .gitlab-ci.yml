@@ -72,16 +72,16 @@ Tagging:
         fi
         echo sfdx_auth_url $sfdx_auth_url_value
         echo $sfdx_auth_url_value > env.sfdx
-        sfdx force:auth:sfdxurl:store --sfdxurlfile env.sfdx --setdefaultusername
-        resultId=$(sfdx force:source:deploy \
+        sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
+        resultId=$(sfdx project:deploy:start \
           --manifest package/package.xml \
-          --postdestructivechanges destructiveChanges/destructiveChanges.xml \
-          --checkonly \
-          --ignorewarnings \
-          --testlevel RunLocalTests \
-          --wait 0 \
+          --post-destructive-changes destructiveChanges/destructiveChanges.xml \
+          --dry-run \
+          --ignore-warnings \
+          --test-level RunLocalTests \
+          --async \
           --json | jq --raw-output '.result.id')
-        sfdx force:source:deploy:report --verbose --jobid $resultId
+        sfdx project:deploy:resume --job-id $resultId
         echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
         echo "---- Validation Successful ----"
       else
@@ -103,7 +103,7 @@ Tagging:
       fi
     - echo sfdx_auth_url $sfdx_auth_url_value
     - echo $sfdx_auth_url_value > env.sfdx
-    - sfdx force:auth:sfdxurl:store --sfdxurlfile env.sfdx --setdefaultusername
+    - sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
     - |
       if [ -s "VALIDATED_DEPLOY_REQUEST_ID.txt" ]; then
         validatedDeployRequestId=$(cat VALIDATED_DEPLOY_REQUEST_ID.txt)
