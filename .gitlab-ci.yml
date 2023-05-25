@@ -13,8 +13,8 @@ Validation:
       - $CI_COMMIT_TAG == null
     refs:
       - main
-      - uat
-      - dev
+      - /^uat.*/
+      - /^dev.*/
   allow_failure: false
 
 Deploy:
@@ -24,8 +24,8 @@ Deploy:
       - $CI_COMMIT_TAG == null
     refs:
       - main
-      - uat
-      - dev
+      - /^uat.*/
+      - /^dev.*/
   allow_failure: false
   when: manual
   needs:
@@ -46,8 +46,8 @@ Tagging:
       - $CI_COMMIT_TAG == null
     refs:
       - main
-      - uat
-      - dev
+      - /^uat.*/
+      - /^dev.*/
 
 .validation-template:
   stage: validation
