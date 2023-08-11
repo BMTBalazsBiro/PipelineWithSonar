@@ -18,7 +18,7 @@ How to setup pipeline:
 
 2.  **Add '.gitlab-ci.yml', '.include' to the git branch 'local/main'**
 
-    1.  Make sure that the name is correctly '.gitlab-ci.yml', '.include' with a dot at the start, otherwise the pipeline will not run
+    1.  Make sure that the name is correctly '`.gitlab-ci.yml`', '.include' with a dot at the start, otherwise the pipeline will not run
 
 3.  **Create CI/CD variables in GitLab → Project → Settings → CI/CD → Variables**
 
