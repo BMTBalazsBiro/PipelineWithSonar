@@ -71,7 +71,7 @@ Considerations:
 
     -   By default it's: **20**
 
-    -   You might need to increase this number, the last tagged commit 'too old'. It can happen, when you merge 'too many' commits to the target branch, without deployment.
+    -   You **might need to increase** this number, the last tagged commit 'too old'. It can happen, when you merge 'too many' commits to the target branch, without deployment.
 
 Resources:
 ----------
