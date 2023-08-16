@@ -14,7 +14,7 @@ Validation:
     refs:
       - main
       - /^uat.*/
-      - /^dev.*/
+      - /^sit.*/
   allow_failure: false
 
 Deploy:
@@ -25,7 +25,7 @@ Deploy:
     refs:
       - main
       - /^uat.*/
-      - /^dev.*/
+      - /^sit.*/
   allow_failure: false
   when: manual
   needs:
@@ -47,7 +47,7 @@ Tagging:
     refs:
       - main
       - /^uat.*/
-      - /^dev.*/
+      - /^sit.*/
 
 .validation-template:
   stage: validation
