@@ -25,7 +25,7 @@ jobs:
         run: |
           
           test_value = "SFDX_AUTH_URL_MAIN"
-          sfdx_auth_url_value_main= ${{ secrets[format('{0}', "SFDX_AUTH_URL_MAIN")] }}
+          sfdx_auth_url_value_main= ${{ secrets[test_value] }}
           echo "sfdx_auth_url_value_main" $sfdx_auth_url_value_main
 
 #          lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
