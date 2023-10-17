@@ -24,7 +24,7 @@ jobs:
           SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
           ENVIRONMENT: SFDX_AUTH_URL_MAIN
         run: |
-          echo ${{ secrets[format('{0}', SFDX_AUTH_URL_MAIN )] }}
+          echo ${{ secrets[format('{0}', 'SFDX_AUTH_URL_MAIN' )] }}
 
 #          lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
 #          echo lastTag $lastTag
