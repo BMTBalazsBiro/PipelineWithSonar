@@ -14,7 +14,7 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
-#    container: bitmist/cicd:latest
+    container: bitmist/cicd:latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
