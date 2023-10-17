@@ -14,23 +14,30 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
-    container: bitmist/cicd:latest
+#    container: bitmist/cicd:latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Run validation script
+        env:
+          SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
         run: |
-          lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
-          echo lastTag $lastTag
           
-          if [ -z "$lastTag" ]; then
-            oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
-            lastCommit=$oldestCommit
-          else
-            lastCommit=$(git rev-list -n 1 $lastTag)
-          fi
-          echo Compare from commitHash $lastCommit
+          test_value = "SFDX_AUTH_URL_MAIN"
+          sfdx_auth_url_value_main= ${{ secrets[format('{0}', "SFDX_AUTH_URL_MAIN")] }}
+          echo "sfdx_auth_url_value_main" $sfdx_auth_url_value_main
+
+#          lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
+#          echo lastTag $lastTag
+#
+#          if [ -z "$lastTag" ]; then
+#            oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
+#            lastCommit=$oldestCommit
+#          else
+#            lastCommit=$(git rev-list -n 1 $lastTag)
+#          fi
+#          echo Compare from commitHash $lastCommit
 #          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
 #          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
 #            sfdx_auth_url=SFDX_AUTH_URL_${CI_COMMIT_BRANCH^^}
