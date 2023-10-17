@@ -25,7 +25,7 @@ jobs:
           ENVIRONMENT: SFDX_AUTH_URL_MAIN
         run: |
           echo ${{ secrets[format('{0}', 'SFDX_AUTH_URL_MAIN' )] }}
-          echo ${ $GITHUB_REF_NAME^^ }
+          echo ${ GITHUB_REF_NAME^^ }
 
 #          lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
 #          echo lastTag $lastTag
