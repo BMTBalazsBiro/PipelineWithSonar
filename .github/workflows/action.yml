@@ -14,7 +14,7 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
-    container: bitmist/cicd:latest
+#    container: bitmist/cicd:latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
           SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
           ENVIRONMENT: SFDX_AUTH_URL_MAIN
         run: |
-          echo ${{ secrets[format('{0}', env.ENVIRONMENT )] }}
+          echo ${{ secrets[format('{0}', SFDX_AUTH_URL_MAIN )] }}
 
 #          lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
 #          echo lastTag $lastTag
