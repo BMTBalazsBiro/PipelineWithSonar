@@ -14,15 +14,16 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
-    container: bitmist/cicd:latest
+#    container: bitmist/cicd:latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Run validation script
         run: |
-          git config --global --add safe.directory /__w/PipelineSourceDevelopment/PipelineSourceDevelopment
           lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
+          echo lastTag $lastTag
+          
           if [ -z "$lastTag" ]; then
             oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
             lastCommit=$oldestCommit
