@@ -1,0 +1,95 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - 'uat*'
+      - 'sit*'
+
+env:
+  CI_COMMIT_SHA: ${{ github.sha }}
+  CI_COMMIT_BRANCH: ${{ github.ref_name	 }}
+
+jobs:
+  Validation:
+    runs-on: ubuntu-latest
+    container: bitmist/cicd:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run validation script
+        run: |
+          lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
+          if [ -z "$lastTag" ]; then
+            oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
+            lastCommit=$oldestCommit
+          else
+            lastCommit=$(git rev-list -n 1 $lastTag)
+          fi
+          echo Compare from commitHash $lastCommit
+          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
+          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
+            sfdx_auth_url=SFDX_AUTH_URL_${CI_COMMIT_BRANCH^^}
+            sfdx_auth_url_value=${!sfdx_auth_url}
+            if [ -z "$sfdx_auth_url_value" ]; then
+              echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
+              exit 1
+            fi
+            echo sfdx_auth_url $sfdx_auth_url_value
+            echo $sfdx_auth_url_value > env.sfdx
+            sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
+            resultId=$(sfdx project:deploy:start \
+              --manifest package/package.xml \
+              --post-destructive-changes destructiveChanges/destructiveChanges.xml \
+              --dry-run \
+              --ignore-warnings \
+              --test-level RunLocalTests \
+              --async \
+              --json | jq --raw-output '.result.id')
+            sfdx project:deploy:resume --job-id $resultId
+            echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
+            echo "---- Validation Successful ----"
+          else
+            echo "---- No changes to deploy ----"
+          fi
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: VALIDATED_DEPLOY_REQUEST_ID.txt
+          path: VALIDATED_DEPLOY_REQUEST_ID.txt
+
+  Deploy:
+    needs: Validation
+    runs-on: ubuntu-latest
+    container: bitmist/cicd:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: VALIDATED_DEPLOY_REQUEST_ID.txt
+
+      - name: Run deploy script
+        run: |
+          sfdx_auth_url=SFDX_AUTH_URL_${CI_COMMIT_BRANCH^^}
+          sfdx_auth_url_value=${!sfdx_auth_url}
+          if [ -z "$sfdx_auth_url_value" ]; then
+            echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
+            exit 1
+          fi
+          echo sfdx_auth_url $sfdx_auth_url_value
+          echo $sfdx_auth_url_value > env.sfdx
+          sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
+          if [ -s "VALIDATED_DEPLOY_REQUEST_ID.txt" ]; then
+            validatedDeployRequestId=$(cat VALIDATED_DEPLOY_REQUEST_ID.txt)
+            sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
+          else
+            echo "---- No validated deploy request id found in the VALIDATED_DEPLOY_REQUEST_ID.txt artifact ----"
+          fi
+        shell: bash
