@@ -4,6 +4,6 @@
 
 public with sharing class ClassA {
     public static void print() {
-        Integer i=0;
+        Integer i=2;
     }
 }

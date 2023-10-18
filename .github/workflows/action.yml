@@ -18,7 +18,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      - name: Install sfdx-git-delta plugin
+        run: echo y | sfdx plugins:install sfdx-git-delta
       - name: Run validation script
         env:
           SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
@@ -38,7 +39,7 @@ jobs:
           fi
           echo lastCommit $lastCommit
           echo Compare from commitHash $lastCommit
-          echo y | sfdx plugins:install sfdx-git-delta
+
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
           
           if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
