@@ -64,47 +64,82 @@ jobs:
           echo Compare from commitHash $lastCommit
 
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
-
-          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
-
-            branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
+          
+          branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
             echo "branch_name" $branch_name
 
-            if [ "$branch_name" == "MAIN" ]; then
-              sfdx_auth_url_value=$SFDX_AUTH_URL_MAIN
-            elif [ "$branch_name" == "UAT" ]; then
-              sfdx_auth_url_value=$SFDX_AUTH_URL_UAT
-            elif [ "$branch_name" == "SIT" ]; then
-              sfdx_auth_url_value=$SFDX_AUTH_URL_SIT
-            else
-              echo "Invalid branch name: $branch_name"
-              exit 1
-            fi
-
-            echo "sfdx_auth_url_value" $sfdx_auth_url_value
-
-            if [ -z "$sfdx_auth_url_value" ]; then
-              echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
-              exit 1
-            fi
-            echo sfdx_auth_url $sfdx_auth_url_value
-            echo $sfdx_auth_url_value > env.sfdx
-            sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
-            resultId=$(sfdx project:deploy:start \
-              --manifest package/package.xml \
-              --post-destructive-changes destructiveChanges/destructiveChanges.xml \
-              --dry-run \
-              --ignore-warnings \
-              --test-level RunLocalTests \
-              --async \
-              --json | jq --raw-output '.result.id')
-            sfdx project:deploy:resume --job-id $resultId
-            echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
-            echo "---- Validation Successful ----"
+          if [ "$branch_name" == "MAIN" ]; then
+            sfdx_auth_url_value=$SFDX_AUTH_URL_MAIN
+          elif [ "$branch_name" == "UAT" ]; then
+            sfdx_auth_url_value=$SFDX_AUTH_URL_UAT
+          elif [ "$branch_name" == "SIT" ]; then
+            sfdx_auth_url_value=$SFDX_AUTH_URL_SIT
           else
-            touch VALIDATED_DEPLOY_REQUEST_ID.txt
-            echo "---- No changes to deploy ----"
+            echo "Invalid branch name: $branch_name"
+            exit 1
           fi
+
+          echo "sfdx_auth_url_value" $sfdx_auth_url_value
+
+          if [ -z "$sfdx_auth_url_value" ]; then
+            echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
+            exit 1
+          fi
+          echo sfdx_auth_url $sfdx_auth_url_value
+          echo $sfdx_auth_url_value > env.sfdx
+          sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
+          resultId=$(sfdx project:deploy:start \
+            --manifest package/package.xml \
+            --post-destructive-changes destructiveChanges/destructiveChanges.xml \
+            --dry-run \
+            --ignore-warnings \
+            --test-level RunLocalTests \
+            --async \
+            --json | jq --raw-output '.result.id')
+          sfdx project:deploy:resume --job-id $resultId
+          echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
+          echo "---- Validation Successful ----"
+
+#          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
+#
+#            branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
+#            echo "branch_name" $branch_name
+#
+#            if [ "$branch_name" == "MAIN" ]; then
+#              sfdx_auth_url_value=$SFDX_AUTH_URL_MAIN
+#            elif [ "$branch_name" == "UAT" ]; then
+#              sfdx_auth_url_value=$SFDX_AUTH_URL_UAT
+#            elif [ "$branch_name" == "SIT" ]; then
+#              sfdx_auth_url_value=$SFDX_AUTH_URL_SIT
+#            else
+#              echo "Invalid branch name: $branch_name"
+#              exit 1
+#            fi
+#
+#            echo "sfdx_auth_url_value" $sfdx_auth_url_value
+#
+#            if [ -z "$sfdx_auth_url_value" ]; then
+#              echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
+#              exit 1
+#            fi
+#            echo sfdx_auth_url $sfdx_auth_url_value
+#            echo $sfdx_auth_url_value > env.sfdx
+#            sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
+#            resultId=$(sfdx project:deploy:start \
+#              --manifest package/package.xml \
+#              --post-destructive-changes destructiveChanges/destructiveChanges.xml \
+#              --dry-run \
+#              --ignore-warnings \
+#              --test-level RunLocalTests \
+#              --async \
+#              --json | jq --raw-output '.result.id')
+#            sfdx project:deploy:resume --job-id $resultId
+#            echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
+#            echo "---- Validation Successful ----"
+#          else
+#            touch VALIDATED_DEPLOY_REQUEST_ID.txt
+#            echo "---- No changes to deploy ----"
+#          fi
         shell: bash
 
       - name: Upload artifact
@@ -157,12 +192,11 @@ jobs:
           cat ./artifact/VALIDATED_DEPLOY_REQUEST_ID.txt
           validatedDeployRequestId=$(cat ./artifact/VALIDATED_DEPLOY_REQUEST_ID.txt)
           
-          sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
-          
           if [ -z "$validatedDeployRequestId" ]; then
             echo "---- No validated deploy request id found in the VALIDATED_DEPLOY_REQUEST_ID.txt artifact ----"
             exit 1
           else
+            sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
             sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
           fi
         shell: bash
