@@ -38,7 +38,7 @@ jobs:
           fi
           echo lastCommit $lastCommit
           echo Compare from commitHash $lastCommit
-          sfdx plugins:install sfdx-git-delta
+          echo y | sfdx plugins:install sfdx-git-delta
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
           
           if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
