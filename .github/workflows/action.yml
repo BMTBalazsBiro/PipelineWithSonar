@@ -27,6 +27,12 @@ jobs:
           github_token: ${{ github.token }}
           custom_tag: _deploy_${{ github.sha }}
           tag_prefix: ${{ github.ref_name }}
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
 #  Validation:
 #    runs-on: ubuntu-latest
 #    container: bitmist/cicd:latest
