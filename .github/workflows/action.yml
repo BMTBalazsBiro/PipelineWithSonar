@@ -25,7 +25,7 @@ jobs:
         uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ github.token }}
-          custom_tag: ${CI_COMMIT_BRANCH}_deploy_${CI_COMMIT_SHA}
+          custom_tag: ${github.ref_name}_deploy_${github.sha}
 #  Validation:
 #    runs-on: ubuntu-latest
 #    container: bitmist/cicd:latest
