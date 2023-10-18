@@ -37,7 +37,6 @@ jobs:
   Validation:
     runs-on: ubuntu-latest
     container: bitmist/cicd:latest
-    needs: Tagging
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
