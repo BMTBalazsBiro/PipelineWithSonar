@@ -33,6 +33,7 @@ jobs:
           else
             lastCommit=$(git rev-list -n 1 $lastTag)
           fi
+          echo lastCommit $lastCommit
           echo Compare from commitHash $lastCommit
 #          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
 #          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
