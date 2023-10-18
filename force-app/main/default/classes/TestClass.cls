@@ -8,5 +8,6 @@ private class TestClass {
     static void testBehavior() {
         ClassA.print();
         System.assertEquals('a','a');
+        System.assertEquals('a','a');
     }
 }
