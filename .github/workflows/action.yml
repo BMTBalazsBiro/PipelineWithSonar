@@ -13,7 +13,7 @@ env:
 
 jobs:
   Tagging:
-    needs: Validation
+    needs: Deploy
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -113,34 +113,46 @@ jobs:
           name: VALIDATED_DEPLOY_REQUEST_ID.txt
           path: VALIDATED_DEPLOY_REQUEST_ID.txt
 
-#  Deploy:
-#    needs: Validation
-#    runs-on: ubuntu-latest
-#    container: bitmist/cicd:latest
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-#
-#      - name: Download artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: VALIDATED_DEPLOY_REQUEST_ID.txt
-#
-#      - name: Run deploy script
-#        run: |
-#          sfdx_auth_url=SFDX_AUTH_URL_${CI_COMMIT_BRANCH^^}
-#          sfdx_auth_url_value=${!sfdx_auth_url}
-#          if [ -z "$sfdx_auth_url_value" ]; then
-#            echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
-#            exit 1
-#          fi
-#          echo sfdx_auth_url $sfdx_auth_url_value
-#          echo $sfdx_auth_url_value > env.sfdx
-#          sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
-#          if [ -s "VALIDATED_DEPLOY_REQUEST_ID.txt" ]; then
-#            validatedDeployRequestId=$(cat VALIDATED_DEPLOY_REQUEST_ID.txt)
-#            sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
-#          else
-#            echo "---- No validated deploy request id found in the VALIDATED_DEPLOY_REQUEST_ID.txt artifact ----"
-#          fi
-#        shell: bash
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: Validation
+    container: bitmist/cicd:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: VALIDATED_DEPLOY_REQUEST_ID.txt
+
+      - name: Run deploy script
+        run: |
+          branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
+          echo "branch_name" $branch_name
+
+          if [ "$branch_name" == "MAIN" ]; then
+            sfdx_auth_url_value=$SFDX_AUTH_URL_MAIN
+          elif [ "$branch_name" == "UAT" ]; then
+            sfdx_auth_url_value=$SFDX_AUTH_URL_UAT
+          elif [ "$branch_name" == "SIT" ]; then
+            sfdx_auth_url_value=$SFDX_AUTH_URL_SIT
+          else
+            echo "Invalid branch name: $branch_name"
+            exit 1
+          fi
+
+          if [ -z "$sfdx_auth_url_value" ]; then
+            echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
+            exit 1
+          fi
+          echo sfdx_auth_url $sfdx_auth_url_value
+          echo $sfdx_auth_url_value > env.sfdx
+          sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
+          if [ -s "VALIDATED_DEPLOY_REQUEST_ID.txt" ]; then
+            validatedDeployRequestId=$(cat VALIDATED_DEPLOY_REQUEST_ID.txt)
+            sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
+          else
+            echo "---- No validated deploy request id found in the VALIDATED_DEPLOY_REQUEST_ID.txt artifact ----"
+          fi
+        shell: bash
