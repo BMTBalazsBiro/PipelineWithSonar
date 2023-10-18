@@ -129,10 +129,9 @@ jobs:
       - name: Display structure of downloaded files
         run: |
           echo ${{steps.download.outputs.download-path}}
-          ls -R
       - name: Run deploy script
         run: |
-          cat ./VALIDATED_DEPLOY_REQUEST_ID.txt
+          cat ./VALIDATED_DEPLOY_REQUEST_ID.txt/VALIDATED_DEPLOY_REQUEST_ID.txt
           
           branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
           echo "branch_name" $branch_name
