@@ -96,6 +96,7 @@ jobs:
             --test-level RunLocalTests \
             --async \
             --json | jq --raw-output '.result.id')
+          echo "resultId" $resultId
           sfdx project:deploy:resume --job-id $resultId
           echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
           echo "---- Validation Successful ----"
