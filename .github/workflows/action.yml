@@ -40,7 +40,7 @@ jobs:
           echo Compare from commitHash $lastCommit
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
           
-          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
+          if ( grep -q '<types>' ./manifest/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
         
             branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
             echo "branch_name" $branch_name
@@ -57,7 +57,6 @@ jobs:
             fi
             
             echo "sfdx_auth_url_value" $sfdx_auth_url_value
-          
           
             if [ -z "$sfdx_auth_url_value" ]; then
               echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
