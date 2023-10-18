@@ -50,7 +50,9 @@ jobs:
           REPO_NAME: ${{ github.event.repository.name }}
         run: |
           git config --global --add safe.directory /__w/$REPO_NAME/$REPO_NAME
-          lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
+          regexToMatch="${CI_COMMIT_BRANCH}*"
+          echo regexToMatch $regexToMatch
+          lastTag=$(git describe --tags --abbrev=0 --match "$regexToMatch") || true
           echo lastTag $lastTag
 
            if [ -z "$lastTag" ]; then
