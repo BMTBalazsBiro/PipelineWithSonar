@@ -38,9 +38,10 @@ jobs:
           fi
           echo lastCommit $lastCommit
           echo Compare from commitHash $lastCommit
+          sfdx plugins:install sfdx-git-delta
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
           
-          if ( grep -q '<types>' ./manifest/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
+          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
         
             branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
             echo "branch_name" $branch_name
