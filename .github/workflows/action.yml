@@ -126,9 +126,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: request_id_artifact
+          path: VALIDATED_DEPLOY_REQUEST_ID.txt
 
       - name: Run deploy script
         run: |
+          cat VALIDATED_DEPLOY_REQUEST_ID.txt
           branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
           echo "branch_name" $branch_name
 
