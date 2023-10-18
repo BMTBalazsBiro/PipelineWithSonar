@@ -40,9 +40,11 @@ jobs:
           echo Compare from commitHash $lastCommit
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
           
-          branch_name=$(echo "$GITHUB_REF_NAME" | tr '[:lower:]' '[:upper:]')
+          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
+        
+            branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
             echo "branch_name" $branch_name
-          
+            
             if [ "$branch_name" == "MAIN" ]; then
               sfdx_auth_url_value=$SFDX_AUTH_URL_MAIN
             elif [ "$branch_name" == "UAT" ]; then
@@ -53,14 +55,8 @@ jobs:
               echo "Invalid branch name: $branch_name"
               exit 1
             fi
-          
+            
             echo "sfdx_auth_url_value" $sfdx_auth_url_value
-          
-          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
-          
-            sfdx_auth_url=SFDX_AUTH_URL_${CI_COMMIT_BRANCH^^}
-            sfdx_auth_url_value=${!sfdx_auth_url}
-          
           
           
             if [ -z "$sfdx_auth_url_value" ]; then
