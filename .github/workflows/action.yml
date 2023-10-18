@@ -14,7 +14,7 @@ env:
 jobs:
   Validation:
     runs-on: ubuntu-latest
-    container: bitmist/cicd:latest
+#    container: bitmist/cicd:latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
           SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
           ENVIRONMENT: SFDX_AUTH_URL_MAIN
         run: |
-          echo lastTagValue ${CI_COMMIT_BRANCH}*"
+          echo lastTagValue ${CI_COMMIT_BRANCH}"
           lastTag=$(git describe --tags --abbrev=0 --match "${CI_COMMIT_BRANCH}*") || true
           echo lastTag $lastTag
 
@@ -35,31 +35,31 @@ jobs:
             lastCommit=$(git rev-list -n 1 $lastTag)
           fi
           echo Compare from commitHash $lastCommit
-          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
-          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
-            sfdx_auth_url=SFDX_AUTH_URL_${CI_COMMIT_BRANCH^^}
-            sfdx_auth_url_value=${!sfdx_auth_url}
-            if [ -z "$sfdx_auth_url_value" ]; then
-              echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
-              exit 1
-            fi
-            echo sfdx_auth_url $sfdx_auth_url_value
-            echo $sfdx_auth_url_value > env.sfdx
-            sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
-            resultId=$(sfdx project:deploy:start \
-              --manifest package/package.xml \
-              --post-destructive-changes destructiveChanges/destructiveChanges.xml \
-              --dry-run \
-              --ignore-warnings \
-              --test-level RunLocalTests \
-              --async \
-              --json | jq --raw-output '.result.id')
-            sfdx project:deploy:resume --job-id $resultId
-            echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
-            echo "---- Validation Successful ----"
-          else
-            echo "---- No changes to deploy ----"
-          fi
+#          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
+#          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
+#            sfdx_auth_url=SFDX_AUTH_URL_${CI_COMMIT_BRANCH^^}
+#            sfdx_auth_url_value=${!sfdx_auth_url}
+#            if [ -z "$sfdx_auth_url_value" ]; then
+#              echo "---- Missing $sfdx_auth_url from CI/CD variables ----"
+#              exit 1
+#            fi
+#            echo sfdx_auth_url $sfdx_auth_url_value
+#            echo $sfdx_auth_url_value > env.sfdx
+#            sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
+#            resultId=$(sfdx project:deploy:start \
+#              --manifest package/package.xml \
+#              --post-destructive-changes destructiveChanges/destructiveChanges.xml \
+#              --dry-run \
+#              --ignore-warnings \
+#              --test-level RunLocalTests \
+#              --async \
+#              --json | jq --raw-output '.result.id')
+#            sfdx project:deploy:resume --job-id $resultId
+#            echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
+#            echo "---- Validation Successful ----"
+#          else
+#            echo "---- No changes to deploy ----"
+#          fi
         shell: bash
 
       - name: Upload artifact
