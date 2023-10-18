@@ -7,7 +7,5 @@ private class TestClass {
     @IsTest
     static void testBehavior() {
         ClassA.print();
-        System.assertEquals('a','a');
-        System.assertEquals('a','a');
     }
 }

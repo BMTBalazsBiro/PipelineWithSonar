@@ -102,7 +102,7 @@ jobs:
             echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
             echo "---- Validation Successful ----"
           else
-            echo "test" > VALIDATED_DEPLOY_REQUEST_ID.txt
+            touch VALIDATED_DEPLOY_REQUEST_ID.txt
             echo "---- No changes to deploy ----"
           fi
         shell: bash
@@ -128,10 +128,10 @@ jobs:
           path: ./artifact
       - name: Display structure of downloaded files
         run: |
-          ls -la
+          ls -R
       - name: Run deploy script
         run: |
-          cat ./artifact/VALIDATED_DEPLOY_REQUEST_ID.txt
+      
           
           branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
           echo "branch_name" $branch_name
@@ -153,11 +153,16 @@ jobs:
           fi
           echo sfdx_auth_url $sfdx_auth_url_value
           echo $sfdx_auth_url_value > env.sfdx
+          
+          cat ./artifact/VALIDATED_DEPLOY_REQUEST_ID.txt
+          validatedDeployRequestId=$(cat ./artifact/VALIDATED_DEPLOY_REQUEST_ID.txt)
+          
           sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
-          if [ -s "VALIDATED_DEPLOY_REQUEST_ID.txt" ]; then
-            validatedDeployRequestId=$(cat VALIDATED_DEPLOY_REQUEST_ID.txt)
-            sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
-          else
+          
+          if [ -z "$validatedDeployRequestId" ]; then
             echo "---- No validated deploy request id found in the VALIDATED_DEPLOY_REQUEST_ID.txt artifact ----"
+            exit 1
+          else
+            sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
           fi
         shell: bash
