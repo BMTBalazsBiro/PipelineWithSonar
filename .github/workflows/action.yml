@@ -103,6 +103,7 @@ jobs:
             echo $resultId > VALIDATED_DEPLOY_REQUEST_ID.txt
             echo "---- Validation Successful ----"
           else
+            echo "test" > VALIDATED_DEPLOY_REQUEST_ID.txt
             echo "---- No changes to deploy ----"
           fi
         shell: bash
@@ -110,7 +111,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: VALIDATED_DEPLOY_REQUEST_ID.txt
+          name: request_id_artifact
           path: VALIDATED_DEPLOY_REQUEST_ID.txt
 
   Deploy:
@@ -124,7 +125,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
-          name: VALIDATED_DEPLOY_REQUEST_ID.txt
+          name: request_id_artifact
 
       - name: Run deploy script
         run: |
