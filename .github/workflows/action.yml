@@ -25,7 +25,7 @@ jobs:
         uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ github.token }}
-          custom_tag: _deploy_
+          custom_tag: _deploy_${{ github.sha }}
           tag_prefix: ${{ github.ref_name }}
 #  Validation:
 #    runs-on: ubuntu-latest
