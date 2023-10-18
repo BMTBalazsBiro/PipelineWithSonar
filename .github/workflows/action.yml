@@ -42,8 +42,8 @@ jobs:
 
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
           
-          echo  grep -q '<types>' ./package/package.xml 
-          if [ grep -q '<types>' ./package/package.xml ] || [ grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ] ; then
+          echo $(grep '<types>' ./package/package.xml)
+          if grep -q '<types>' ./package/package.xml || grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ; then
         
             branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
             echo "branch_name" $branch_name
