@@ -10,6 +10,10 @@ on:
 env:
   CI_COMMIT_SHA: ${{ github.sha }}
   CI_COMMIT_BRANCH: ${{ github.ref_name	 }}
+  SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
+  SFDX_AUTH_URL_UAT: ${{ secrets.SFDX_AUTH_URL_UAT }}
+  SFDX_AUTH_URL_SIT: ${{ secrets.SFDX_AUTH_URL_SIT }}
+  REPO_NAME: ${{ github.event.repository.name }}
 
 jobs:
   Tagging:
@@ -43,11 +47,6 @@ jobs:
       - name: Install sfdx-git-delta plugin
         run: echo y | sfdx plugins:install sfdx-git-delta
       - name: Run validation script
-        env:
-          SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
-          SFDX_AUTH_URL_UAT: ${{ secrets.SFDX_AUTH_URL_UAT }}
-          SFDX_AUTH_URL_SIT: ${{ secrets.SFDX_AUTH_URL_SIT }}
-          REPO_NAME: ${{ github.event.repository.name }}
         run: |
           git config --global --add safe.directory /__w/$REPO_NAME/$REPO_NAME
           regexToMatch="${CI_COMMIT_BRANCH}*"
@@ -133,6 +132,8 @@ jobs:
           ls -R
       - name: Run deploy script
         run: |
+          cat ./VALIDATED_DEPLOY_REQUEST_ID.txt
+          
           branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
           echo "branch_name" $branch_name
 
