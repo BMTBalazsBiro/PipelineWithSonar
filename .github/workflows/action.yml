@@ -44,12 +44,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        run: git fetch --prune --unshallow
       - name: Install sfdx-git-delta plugin
         run: echo y | sfdx plugins:install sfdx-git-delta
       - name: Run validation script
         run: |
           git config --global --add safe.directory /__w/$REPO_NAME/$REPO_NAME
+          git fetch --prune --unshallow
           regexToMatch="${CI_COMMIT_BRANCH}*"
           echo regexToMatch $regexToMatch
 
