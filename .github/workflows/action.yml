@@ -166,6 +166,6 @@ jobs:
             exit 1
           else
             sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
-            sf project deploy quick --job-id $validatedDeployRequestId
+            sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
           fi
         shell: bash
