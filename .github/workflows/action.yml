@@ -51,6 +51,7 @@ jobs:
           git config --global --add safe.directory /__w/$REPO_NAME/$REPO_NAME
           regexToMatch="${CI_COMMIT_BRANCH}*"
           echo regexToMatch $regexToMatch
+          git fetch --depth=500
           lastTag=$(git describe --tags --abbrev=0 --match "$regexToMatch") || true
           echo lastTag $lastTag
 
