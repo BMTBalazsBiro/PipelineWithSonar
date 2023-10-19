@@ -6,6 +6,8 @@ on:
       - main
       - uat
       - sit
+    paths:
+      - 'force-app/**'
 
 env:
   CI_COMMIT_SHA: ${{ github.sha }}
@@ -165,5 +167,6 @@ jobs:
           else
             sfdx org:login:sfdx-url --sfdx-url-file env.sfdx --set-default
             sfdx force:source:deploy --validateddeployrequestid $validatedDeployRequestId --wait 100 --verbose
+    
           fi
         shell: bash
