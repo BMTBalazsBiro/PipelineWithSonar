@@ -8,5 +8,6 @@ private class TestClass {
     static void testBehavior() {
         ClassA.print();
         ClassA.print();
+        ClassA.print();
     }
 }
