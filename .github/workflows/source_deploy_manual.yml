@@ -39,9 +39,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Display structure of downloaded files
-        run: |
-          ls -R
       - name: Run deploy script
         run: |
           branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
