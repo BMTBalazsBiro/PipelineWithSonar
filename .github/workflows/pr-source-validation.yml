@@ -21,15 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     container: bitmist/cicd:latest
     steps:
-      - name: Checkout code
+      - name: 'Checkout code'
         uses: actions/checkout@v4
-      - name: Git fetch tags
+      - name: 'Git fetch tags'
         run: |
           git config --global --add safe.directory /__w/$REPO_NAME/$REPO_NAME
           git fetch --prune --unshallow
-      - name: Install sfdx-git-delta plugin
+      - name: 'Install sfdx-git-delta plugin'
         run: echo y | sfdx plugins:install sfdx-git-delta
-      - name: Create delta packages for new, modified or deleted metadata
+      - name: 'Create delta packages for new, modified or deleted metadata'
         run: |
           regexToMatch="tag-${TARGET_BRANCH}_deploy*"
           echo regexToMatch $regexToMatch
@@ -47,7 +47,7 @@ jobs:
           echo Compare from commitHash $lastCommit
           
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
-      - name: Populate auth file with SFDX_URL secret of integration org
+      - name: 'Populate auth file with SFDX_URL secret of integration org'
         run: |
           sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.TARGET_BRANCH )] }}
           
@@ -56,4 +56,6 @@ jobs:
            exit 1
           fi
           echo $sfdx_auth_url_value > ./env.sfdx
-          echo "---- Auth file populated with sfdx_auth_url$TARGET_BRANCH secret----"
+          echo "---- Auth file populated with sfdx_auth_url_$TARGET_BRANCH secret----"
+      - name: 'Authenticate to Integration Org'
+        run:  sfdx org:login:sfdx-url --sfdx-url-file ./env.sfdx --set-default
