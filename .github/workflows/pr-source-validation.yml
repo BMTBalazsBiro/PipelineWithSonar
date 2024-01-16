@@ -47,8 +47,9 @@ jobs:
           echo lastCommit $lastCommit
           echo Compare from commitHash $lastCommit
           
+          mkdir changed-sources
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output changed-sources/ --include .include
-          ls -l changed-sources/
+         
           if ( grep -q '<types>' ./changed-sources/package/package.xml ) || ( grep -q '<types>' ./changed-sources/destructiveChanges/destructiveChanges.xml ); then
             echo "---- Changes detected ----"
           else
@@ -58,7 +59,7 @@ jobs:
       - name: 'Scan code'
         run: |
           cd changed-sources
-          sfdx scanner:run --format sarif --target './**/*.cls' --category "Design,Best Practices,Performance" --outfile 'apexScanResults.sarif'  
+          sfdx scanner:run --format sarif --target './**/*.cls' --category "Design,Best Practices,Performance,Security" --outfile 'apexScanResults.sarif'  
           cd ..
 
       - name: Upload SARIF file
@@ -86,8 +87,8 @@ jobs:
            echo "---- Test Level: $testLevel ----"
         
            sfdx project:deploy:start \
-             --manifest package/package.xml \
-             --post-destructive-changes destructiveChanges/destructiveChanges.xml \
+             --manifest ./changed-sources/package/package.xml \
+             --post-destructive-changes ./changed-sources/destructiveChanges/destructiveChanges.xml \
              --dry-run \
              --ignore-warnings \
              --test-level $testLevel \
