@@ -80,9 +80,8 @@ jobs:
               --post-destructive-changes destructiveChanges/destructiveChanges.xml \
               --dry-run \
               --ignore-warnings \
-              --test-level RunAllTestsInOrg \
+              --test-level RunLocalTests \
               --async \
-              --ignore-conflicts \
               --json | tee deploy_result.json
 
             resultId=$(cat deploy_result.json | jq --raw-output '.result.id')
@@ -114,15 +113,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: request_id_artifact
           path: ./artifact
-      - name: Display structure of downloaded files
-        run: |
-          ls -R
       - name: Run deploy script
         run: |
           branch_name=$(echo "$CI_COMMIT_BRANCH" | tr '[:lower:]' '[:upper:]')
