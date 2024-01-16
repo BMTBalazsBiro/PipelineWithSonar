@@ -1,13 +1,16 @@
 name: Source Validation
 
 on:
-  push:
-    branches:
-      - main
-      - uat
-      - sit
-    paths:
-      - 'force-app/**'
+  workflow_dispatch:
+
+#on:
+#  push:
+#    branches:
+#      - main
+#      - uat
+#      - sit
+#    paths:
+#      - 'force-app/**'
 
 env:
   CI_COMMIT_SHA: ${{ github.sha }}

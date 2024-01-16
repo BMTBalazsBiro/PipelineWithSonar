@@ -1,0 +1,50 @@
+name: Source Deploy Manual
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main, uat, sit]
+    paths:
+      - 'force-app/**'
+
+env:
+  CI_COMMIT_SHA: ${{ github.sha }}
+  CI_COMMIT_BRANCH: ${{ github.ref_name	 }}
+  TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+  SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
+  SFDX_AUTH_URL_UAT: ${{ secrets.SFDX_AUTH_URL_UAT }}
+  SFDX_AUTH_URL_SIT: ${{ secrets.SFDX_AUTH_URL_SIT }}
+  REPO_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  Validation:
+    runs-on: ubuntu-latest
+    container: bitmist/cicd:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install sfdx-git-delta plugin
+        run: echo y | sfdx plugins:install sfdx-git-delta
+      - name: Create delta packages for new, modified or deleted metadata
+        run: |
+          echo "TARGET_BRANCH" $TARGET_BRANCH
+          git config --global --add safe.directory /__w/$REPO_NAME/$REPO_NAME
+          git fetch --prune --unshallow
+          regexToMatch="tag-${TARGET_BRANCH}_deploy*"
+          echo regexToMatch $regexToMatch
+
+          lastTag=$(git describe --tags --abbrev=0 --match "$regexToMatch") || true
+          echo lastTag $lastTag
+
+          if [ -z "$lastTag" ]; then
+             oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
+             lastCommit=$oldestCommit
+          else
+             lastCommit=$(git rev-list -n 1 $lastTag)
+          fi
+          echo lastCommit $lastCommit
+          echo Compare from commitHash $lastCommit
+          
+          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
+          
+          cat ./package/package.xml
