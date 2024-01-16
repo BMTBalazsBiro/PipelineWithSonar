@@ -62,7 +62,6 @@ jobs:
       - name: 'Validate deployment'
         run: |
           if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ); then
-                 echo "---- VALIDATION RESULT ----"
             sfdx project:deploy:start \
               --manifest package/package.xml \
               --post-destructive-changes destructiveChanges/destructiveChanges.xml \
@@ -77,7 +76,7 @@ jobs:
               echo "---- Missing validation result ID ----"
               exit 1
             fi
-        
+            echo "---- Validation result ----"
             sfdx project:deploy:resume --job-id $resultId
             echo "---- Validation Successful ----"
           else
