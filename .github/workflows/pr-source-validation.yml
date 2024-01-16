@@ -47,7 +47,24 @@ jobs:
           echo lastCommit $lastCommit
           echo Compare from commitHash $lastCommit
           
-          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
+          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output changed-sources/ --include .include
+          ls -l changed-sources/
+          if ( grep -q '<types>' ./changed-sources/package/package.xml ) || ( grep -q '<types>' ./changed-sources/destructiveChanges/destructiveChanges.xml ); then
+            echo "---- Changes detected ----"
+          else
+            echo "---- No changes to validate ----"
+            exit 0
+          fi
+      - name: 'Scan code'
+        run: |
+          cd changed-sources
+          sfdx scanner:run --format sarif --target './**/*.cls' --category "Design,Best Practices,Performance" --outfile 'apexScanResults.sarif'  
+          cd ..
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: changed-sources/apexScanResults.sarif
       - name: 'Populate auth file with SFDX_AUTH_URL secret'
         run: |
           sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.TARGET_BRANCH )] }}
@@ -62,32 +79,25 @@ jobs:
         run:  sfdx org:login:sfdx-url --sfdx-url-file ./env.sfdx --set-default
       - name: 'Validate deployment'
         run: |
-          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ); then
-          
-            testLevel=$TEST_LEVEL
-         
-            if [ -z "$testLevel" ]; then
-              testLevel="RunAllTestsInOrg"
-            fi
-            echo "---- Test Level: $testLevel ----"
-          
-            sfdx project:deploy:start \
-              --manifest package/package.xml \
-              --post-destructive-changes destructiveChanges/destructiveChanges.xml \
-              --dry-run \
-              --ignore-warnings \
-              --test-level $testLevel \
-              --async \
-              --json | tee validation_result.json
-          
-            resultId=$(cat validation_result.json | jq --raw-output '.result.id')
-            if [ -z "$resultId" -o "$resultId" = "null" ]; then
-              echo "---- Missing validation result ID ----"
-              exit 1
-            fi
-            echo "---- Validation result ----"
-            sfdx project:deploy:resume --job-id $resultId
-            echo "---- Validation Successful ----"
-          else
-            echo "---- No changes to deploy ----"
-          fi
+           testLevel=$TEST_LEVEL
+           if [ -z "$testLevel" ]; then
+             testLevel="RunAllTestsInOrg"
+           fi
+           echo "---- Test Level: $testLevel ----"
+        
+           sfdx project:deploy:start \
+             --manifest package/package.xml \
+             --post-destructive-changes destructiveChanges/destructiveChanges.xml \
+             --dry-run \
+             --ignore-warnings \
+             --test-level $testLevel \
+             --async \
+             --json | tee validation_result.json
+        
+           resultId=$(cat validation_result.json | jq --raw-output '.result.id')
+           if [ -z "$resultId" -o "$resultId" = "null" ]; then
+             echo "---- Missing validation result ID ----"
+             exit 1
+           fi
+           echo "---- Validation result ----"
+           sfdx project:deploy:resume --job-id $resultId
