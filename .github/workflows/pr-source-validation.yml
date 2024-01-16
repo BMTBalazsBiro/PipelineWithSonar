@@ -31,7 +31,6 @@ jobs:
         run: echo y | sfdx plugins:install sfdx-git-delta
       - name: Create delta packages for new, modified or deleted metadata
         run: |
-          echo "TARGET_BRANCH" $TARGET_BRANCH
           regexToMatch="tag-${TARGET_BRANCH}_deploy*"
           echo regexToMatch $regexToMatch
 
@@ -57,3 +56,4 @@ jobs:
            exit 1
           fi
           echo $sfdx_auth_url_value > ./env.sfdx
+          echo "---- Auth file populated with sfdx_auth_url$TARGET_BRANCH secret----"
