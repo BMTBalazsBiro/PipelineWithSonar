@@ -4,8 +4,8 @@ on:
   pull_request:
     types: [opened, synchronize]
     branches: [main, uat, sit]
-    paths:
-      - 'force-app/**'
+#    paths:
+#      - 'force-app/**'
 
 env:
   CI_COMMIT_SHA: ${{ github.sha }}
@@ -23,13 +23,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Git fetch tags
+        run: |
+          git config --global --add safe.directory /__w/$REPO_NAME/$REPO_NAME
+          git fetch --prune --unshallow
       - name: Install sfdx-git-delta plugin
         run: echo y | sfdx plugins:install sfdx-git-delta
       - name: Create delta packages for new, modified or deleted metadata
         run: |
           echo "TARGET_BRANCH" $TARGET_BRANCH
-          git config --global --add safe.directory /__w/$REPO_NAME/$REPO_NAME
-          git fetch --prune --unshallow
           regexToMatch="tag-${TARGET_BRANCH}_deploy*"
           echo regexToMatch $regexToMatch
 
@@ -46,5 +48,12 @@ jobs:
           echo Compare from commitHash $lastCommit
           
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
+      - name: Populate auth file with SFDX_URL secret of integration org
+        run: |
+          sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.CI_COMMIT_BRANCH )] }}
           
-          cat ./package/package.xml
+          if [ -z "$sfdx_auth_url_value" ]; then
+           echo "---- Missing sfdx_auth_url value from CI/CD variables ----"
+           exit 1
+          fi
+          echo $sfdx_auth_url_value > ./env.sfdx
