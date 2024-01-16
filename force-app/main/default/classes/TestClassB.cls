@@ -6,6 +6,6 @@
 private class TestClassB {
     @IsTest
     static void testBehavior() {
-        System.assertEquals(1, 1);
+        System.assertEquals(1, -1);
     }
 }
