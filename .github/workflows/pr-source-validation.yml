@@ -1,4 +1,4 @@
-name: Source Deploy Manual
+name: Source Validation
 
 on:
   pull_request:
@@ -62,12 +62,24 @@ jobs:
       - name: 'Validate deployment'
         run: |
           if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ); then
-             sfdx project:deploy:start \
-               --manifest package/package.xml \
-               --post-destructive-changes destructiveChanges/destructiveChanges.xml \
-               --dry-run \
-               --ignore-warnings \
-               --test-level RunAllTestsInOrg
+                 echo "---- VALIDATION RESULT ----"
+            sfdx project:deploy:start \
+              --manifest package/package.xml \
+              --post-destructive-changes destructiveChanges/destructiveChanges.xml \
+              --dry-run \
+              --ignore-warnings \
+              --test-level RunAllTestsInOrg \
+              --async \
+              --json | tee validation_result.json
+          
+            resultId=$(cat validation_result.json | jq --raw-output '.result.id')
+            if [ -z "$resultId" -o "$resultId" = "null" ]; then
+              echo "---- Missing validation result ID ----"
+              exit 1
+            fi
+        
+            sfdx project:deploy:resume --job-id $resultId
+            echo "---- Validation Successful ----"
           else
             echo "---- No changes to deploy ----"
           fi
