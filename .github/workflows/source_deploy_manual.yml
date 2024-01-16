@@ -39,12 +39,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: request_id_artifact
-          path: ./artifact
       - name: Display structure of downloaded files
         run: |
           ls -R
