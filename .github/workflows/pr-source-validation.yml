@@ -50,7 +50,7 @@ jobs:
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
       - name: Populate auth file with SFDX_URL secret of integration org
         run: |
-          sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.CI_COMMIT_BRANCH )] }}
+          sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.TARGET_BRANCH )] }}
           
           if [ -z "$sfdx_auth_url_value" ]; then
            echo "---- Missing sfdx_auth_url value from CI/CD variables ----"
