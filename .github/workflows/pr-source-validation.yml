@@ -47,7 +47,7 @@ jobs:
           echo Compare from commitHash $lastCommit
           
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output . --include .include
-      - name: 'Populate auth file with SFDX_URL secret of integration org'
+      - name: 'Populate auth file with SFDX_AUTH_URL secret'
         run: |
           sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.TARGET_BRANCH )] }}
           
@@ -57,5 +57,18 @@ jobs:
           fi
           echo $sfdx_auth_url_value > ./env.sfdx
           echo "---- Auth file populated with sfdx_auth_url_$TARGET_BRANCH secret----"
-      - name: 'Authenticate to Integration Org'
+      - name: 'Authenticate to Org'
         run:  sfdx org:login:sfdx-url --sfdx-url-file ./env.sfdx --set-default
+      - name: 'Validate deployment'
+        run: |
+          if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ) ; then
+             sfdx project:deploy:start \
+             --manifest package/package.xml \
+             --post-destructive-changes destructiveChanges/destructiveChanges.xml \
+             --dry-run \
+             --ignore-warnings \
+             --test-level RunAllTestsInOrg \
+             --json
+          else
+            echo "---- No changes to deploy ----"
+          fi
