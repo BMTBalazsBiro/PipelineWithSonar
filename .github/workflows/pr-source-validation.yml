@@ -11,6 +11,7 @@ env:
   CI_COMMIT_SHA: ${{ github.sha }}
   CI_COMMIT_BRANCH: ${{ github.ref_name	 }}
   TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+  TEST_LEVEL: ${{ vars.TEST_LEVEL }}
   SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
   SFDX_AUTH_URL_UAT: ${{ secrets.SFDX_AUTH_URL_UAT }}
   SFDX_AUTH_URL_SIT: ${{ secrets.SFDX_AUTH_URL_SIT }}
@@ -62,12 +63,20 @@ jobs:
       - name: 'Validate deployment'
         run: |
           if ( grep -q '<types>' ./package/package.xml ) || ( grep -q '<types>' ./destructiveChanges/destructiveChanges.xml ); then
+          
+            testLevel=$TEST_LEVEL
+         
+            if [ -z "$testLevel" ]; then
+              testLevel="RunAllTestsInOrg"
+            fi
+            echo "---- Test Level: $testLevel ----"
+          
             sfdx project:deploy:start \
               --manifest package/package.xml \
               --post-destructive-changes destructiveChanges/destructiveChanges.xml \
               --dry-run \
               --ignore-warnings \
-              --test-level RunAllTestsInOrg \
+              --test-level $testLevel \
               --async \
               --json | tee validation_result.json
           
