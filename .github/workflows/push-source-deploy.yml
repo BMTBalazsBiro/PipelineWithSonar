@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     container: bitmist/cicd:latest
     steps:
-      - name: Checkout code
+      - name: 'Checkout code'
         uses: actions/checkout@v4
       - name: 'Git fetch tags'
         run: |
@@ -83,6 +83,7 @@ jobs:
             --ignore-warnings \
             --test-level $testLevel \
             --async \
+            --ignore-conflicts \
             --json | tee deploy_result.json
           
           resultId=$(cat deploy_result.json | jq --raw-output '.result.id')

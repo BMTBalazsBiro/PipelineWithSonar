@@ -82,6 +82,7 @@ jobs:
               --ignore-warnings \
               --test-level RunLocalTests \
               --async \
+              --ignore-conflicts \
               --json | tee deploy_result.json
 
             resultId=$(cat deploy_result.json | jq --raw-output '.result.id')

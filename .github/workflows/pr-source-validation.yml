@@ -89,6 +89,7 @@ jobs:
              --ignore-warnings \
              --test-level $testLevel \
              --async \
+             --ignore-conflicts \
              --json | tee validation_result.json
         
            resultId=$(cat validation_result.json | jq --raw-output '.result.id')
