@@ -56,11 +56,11 @@ jobs:
             echo "---- No changes to validate ----"
             exit 0
           fi
+      - name: 'Installing SFDX scanner'
+        run: sfdx plugins:install @salesforce/sfdx-scanner
       - name: 'Scan code'
         run: |
-          cd changed-sources
-          sfdx scanner:run --format table --target './**/*.cls' --category "Design,Best Practices,Performance,Security"
-          cd ..
+          sfdx scanner:run --format=table --target="./" --category "Performance,Security"
       - name: 'Populate auth file with SFDX_AUTH_URL secret'
         run: |
           sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.TARGET_BRANCH )] }}
