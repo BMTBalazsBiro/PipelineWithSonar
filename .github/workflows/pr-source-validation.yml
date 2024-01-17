@@ -64,7 +64,7 @@ jobs:
       - name: 'Scan code'
         run: |
           cd changed-sources
-          sfdx scanner:run --format=table --target="./**/*.cls" --category "Performance,Security"
+          sfdx scanner:run --format=table --target="./force-app" --category "Performance,Security"
           cd ..
       - name: 'Populate auth file with SFDX_AUTH_URL secret'
         run: |
