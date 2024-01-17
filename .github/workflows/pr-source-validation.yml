@@ -2,7 +2,6 @@ name: Source Validation
 
 on:
   pull_request:
-    types: [opened, synchronize]
     branches: [main, uat, sit]
     paths:
       - 'force-app/**'
