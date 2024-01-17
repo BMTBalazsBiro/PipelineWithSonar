@@ -56,16 +56,13 @@ jobs:
             echo "---- No changes to validate ----"
             exit 0
           fi
-      - name: Display structure of changed-sources folder
+      - name: 'Display structure of changed-sources folder'
         run: |
           ls -R changed-sources
       - name: 'Installing SFDX scanner'
         run: sfdx plugins:install @salesforce/sfdx-scanner
       - name: 'Scan code'
-        run: |
-          cd changed-sources
-          sfdx scanner:run --format=table --target="./force-app" --category "Performance,Security"
-          cd ..
+        run: sfdx scanner:run --format=table --target="./changed-sources/force-app" --category "Performance,Security"
       - name: 'Populate auth file with SFDX_AUTH_URL secret'
         run: |
           sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.TARGET_BRANCH )] }}
