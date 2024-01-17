@@ -48,8 +48,8 @@ jobs:
           echo Compare from commitHash $lastCommit
           
           mkdir changed-sources
-          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output changed-sources/ --include .include
-         
+          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output changed-sources/ --generate-delta --include .include
+        
           if ( grep -q '<types>' ./changed-sources/package/package.xml ) || ( grep -q '<types>' ./changed-sources/destructiveChanges/destructiveChanges.xml ); then
             echo "---- Changes detected ----"
           else
