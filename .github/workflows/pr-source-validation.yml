@@ -22,7 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     container: bitmist/cicd:latest
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
+      repository-projects: write
       security-events: write
     steps:
       - name: 'Checkout code'
