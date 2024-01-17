@@ -1,8 +1,7 @@
-name: Source Validation
+name: Source Deploy
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
     branches: [main, uat, sit]
     paths:
       - 'force-app/**'
@@ -10,7 +9,6 @@ on:
 env:
   CI_COMMIT_SHA: ${{ github.sha }}
   CI_COMMIT_BRANCH: ${{ github.ref_name	 }}
-  TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
   TEST_LEVEL: ${{ vars.TEST_LEVEL }}
   SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
   SFDX_AUTH_URL_UAT: ${{ secrets.SFDX_AUTH_URL_UAT }}
@@ -18,11 +16,11 @@ env:
   REPO_NAME: ${{ github.event.repository.name }}
 
 jobs:
-  Validation:
+  Deploy:
     runs-on: ubuntu-latest
     container: bitmist/cicd:latest
     steps:
-      - name: 'Checkout code'
+      - name: Checkout code
         uses: actions/checkout@v4
       - name: 'Git fetch tags'
         run: |
@@ -32,12 +30,12 @@ jobs:
         run: echo y | sfdx plugins:install sfdx-git-delta
       - name: 'Create delta packages for new, modified or deleted metadata'
         run: |
-          regexToMatch="tag-${TARGET_BRANCH}_deploy*"
+          regexToMatch="tag-${CI_COMMIT_BRANCH}_deploy*"
           echo regexToMatch $regexToMatch
-
+          
           lastTag=$(git describe --tags --abbrev=0 --match "$regexToMatch") || true
           echo lastTag $lastTag
-
+          
           if [ -z "$lastTag" ]; then
              oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
              lastCommit=$oldestCommit
@@ -49,7 +47,7 @@ jobs:
           
           mkdir changed-sources
           sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output changed-sources/ --generate-delta --include .include
-        
+          
           if ( grep -q '<types>' ./changed-sources/package/package.xml ) || ( grep -q '<types>' ./changed-sources/destructiveChanges/destructiveChanges.xml ); then
             echo "---- Changes detected ----"
           else
@@ -59,43 +57,54 @@ jobs:
       - name: 'Display structure of changed-sources folder'
         run: |
           ls -R changed-sources
-      - name: 'Installing SFDX scanner'
-        run: sfdx plugins:install @salesforce/sfdx-scanner
-      - name: 'Scan code'
-        run: sfdx scanner:run --format=table --target="./changed-sources/force-app" --category "Performance,Security"
       - name: 'Populate auth file with SFDX_AUTH_URL secret'
         run: |
-          sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.TARGET_BRANCH )] }}
-          
+          sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.CI_COMMIT_BRANCH )] }}
+
           if [ -z "$sfdx_auth_url_value" ]; then
-           echo "---- Missing sfdx_auth_url_$TARGET_BRANCH value from CI/CD variables ----"
+           echo "---- Missing sfdx_auth_url_$CI_COMMIT_BRANCH value from CI/CD variables ----"
            exit 1
           fi
           echo $sfdx_auth_url_value > ./env.sfdx
-          echo "---- Auth file populated with sfdx_auth_url_$TARGET_BRANCH secret----"
+          echo "---- Auth file populated with sfdx_auth_url_$CI_COMMIT_BRANCH secret----"
       - name: 'Authenticate to Org'
         run:  sfdx org:login:sfdx-url --sfdx-url-file ./env.sfdx --set-default
-      - name: 'Validate deployment'
+      - name: 'Deploy to Org'
         run: |
-           testLevel=$TEST_LEVEL
-           if [ -z "$testLevel" ]; then
-             testLevel="RunAllTestsInOrg"
-           fi
-           echo "---- Test Level: $testLevel ----"
-        
-           sfdx project:deploy:start \
-             --manifest ./changed-sources/package/package.xml \
-             --post-destructive-changes ./changed-sources/destructiveChanges/destructiveChanges.xml \
-             --dry-run \
-             --ignore-warnings \
-             --test-level $testLevel \
-             --async \
-             --json | tee validation_result.json
-        
-           resultId=$(cat validation_result.json | jq --raw-output '.result.id')
-           if [ -z "$resultId" -o "$resultId" = "null" ]; then
-             echo "---- Missing validation result ID ----"
-             exit 1
-           fi
-           echo "---- Validation result ----"
-           sfdx project:deploy:resume --job-id $resultId
+          testLevel=$TEST_LEVEL
+          if [ -z "$testLevel" ]; then
+            testLevel="RunAllTestsInOrg"
+          fi
+          echo "---- Test Level: $testLevel ----"
+          
+          sfdx project:deploy:start \
+            --manifest ./changed-sources/package/package.xml \
+            --post-destructive-changes ./changed-sources/destructiveChanges/destructiveChanges.xml \
+            --ignore-warnings \
+            --test-level $testLevel \
+            --async \
+            --json | tee deploy_result.json
+          
+          resultId=$(cat deploy_result.json | jq --raw-output '.result.id')
+          if [ -z "$resultId" -o "$resultId" = "null" ]; then
+            echo "---- Missing deploy result ID ----"
+            exit 1
+          fi
+          echo "---- Deploy result ----"
+          sfdx project:deploy:resume --job-id $resultId
+  Tagging:
+    needs: Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      repository-projects: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ github.token }}
+          custom_tag: _deploy_${{ github.sha }}
+          tag_prefix: tag-${{ github.ref_name }}
