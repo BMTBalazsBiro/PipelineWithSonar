@@ -4,8 +4,8 @@ on:
   pull_request:
     types: [opened, synchronize]
     branches: [main, uat, sit]
-#    paths:
-#      - 'force-app/**'
+    paths:
+      - 'force-app/**'
 
 env:
   CI_COMMIT_SHA: ${{ github.sha }}
