@@ -60,7 +60,9 @@ jobs:
         run: sfdx plugins:install @salesforce/sfdx-scanner
       - name: 'Scan code'
         run: |
-          sfdx scanner:run --format=table --target="./" --category "Performance,Security"
+          cd changed-sources
+          sfdx scanner:run --format=table --target="./**/*.cls" --category "Performance,Security"
+          cd ..
       - name: 'Populate auth file with SFDX_AUTH_URL secret'
         run: |
           sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.TARGET_BRANCH )] }}
