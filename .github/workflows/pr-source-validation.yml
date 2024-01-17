@@ -56,6 +56,9 @@ jobs:
             echo "---- No changes to validate ----"
             exit 0
           fi
+      - name: Display structure of changed-sources folder
+        run: |
+          ls -R changed-sources
       - name: 'Installing SFDX scanner'
         run: sfdx plugins:install @salesforce/sfdx-scanner
       - name: 'Scan code'
