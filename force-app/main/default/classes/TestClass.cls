@@ -7,6 +7,6 @@ private class TestClass {
     @IsTest
     static void testBehavior() {
         ClassA.print();
-        ClassA.print();
+        System.debug('ClassA.print() = ');
     }
 }

@@ -6,7 +6,6 @@
 private class TestClassB {
     @IsTest
     static void testBehavior() {
-        Assert.areEqual('a','a');
-        Assert.areEqual('a','a');
+        System.assertEquals(1, 1);
     }
 }

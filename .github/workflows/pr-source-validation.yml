@@ -1,0 +1,101 @@
+name: Source Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main, uat, sit]
+    paths:
+      - 'force-app/**'
+
+env:
+  CI_COMMIT_SHA: ${{ github.sha }}
+  CI_COMMIT_BRANCH: ${{ github.ref_name	 }}
+  TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+  TEST_LEVEL: ${{ vars.TEST_LEVEL }}
+  SFDX_AUTH_URL_MAIN: ${{ secrets.SFDX_AUTH_URL_MAIN }}
+  SFDX_AUTH_URL_UAT: ${{ secrets.SFDX_AUTH_URL_UAT }}
+  SFDX_AUTH_URL_SIT: ${{ secrets.SFDX_AUTH_URL_SIT }}
+  REPO_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  Validation:
+    runs-on: ubuntu-latest
+    container: bitmist/cicd:latest
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v4
+      - name: 'Git fetch tags'
+        run: |
+          git config --global --add safe.directory /__w/$REPO_NAME/$REPO_NAME
+          git fetch --prune --unshallow
+      - name: 'Install sfdx-git-delta plugin'
+        run: echo y | sfdx plugins:install sfdx-git-delta
+      - name: 'Create delta packages for new, modified or deleted metadata'
+        run: |
+          regexToMatch="tag-${TARGET_BRANCH}_deploy*"
+          echo regexToMatch $regexToMatch
+
+          lastTag=$(git describe --tags --abbrev=0 --match "$regexToMatch") || true
+          echo lastTag $lastTag
+
+          if [ -z "$lastTag" ]; then
+             oldestCommit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
+             lastCommit=$oldestCommit
+          else
+             lastCommit=$(git rev-list -n 1 $lastTag)
+          fi
+          echo lastCommit $lastCommit
+          echo Compare from commitHash $lastCommit
+          
+          mkdir changed-sources
+          sfdx sgd:source:delta --to $CI_COMMIT_SHA --from $lastCommit --output changed-sources/ --generate-delta --include .include
+        
+          if ( grep -q '<types>' ./changed-sources/package/package.xml ) || ( grep -q '<types>' ./changed-sources/destructiveChanges/destructiveChanges.xml ); then
+            echo "---- Changes detected ----"
+          else
+            echo "---- No changes to validate ----"
+            exit 0
+          fi
+      - name: 'Display structure of changed-sources folder'
+        run: |
+          ls -R changed-sources
+      - name: 'Installing SFDX scanner'
+        run: sfdx plugins:install @salesforce/sfdx-scanner
+      - name: 'Scan code'
+        run: sfdx scanner:run --format=table --target="./changed-sources/force-app" --category "Performance,Security"
+      - name: 'Populate auth file with SFDX_AUTH_URL secret'
+        run: |
+          sfdx_auth_url_value=${{ secrets[format('SFDX_AUTH_URL_{0}', env.TARGET_BRANCH )] }}
+          
+          if [ -z "$sfdx_auth_url_value" ]; then
+           echo "---- Missing sfdx_auth_url_$TARGET_BRANCH value from CI/CD variables ----"
+           exit 1
+          fi
+          echo $sfdx_auth_url_value > ./env.sfdx
+          echo "---- Auth file populated with sfdx_auth_url_$TARGET_BRANCH secret----"
+      - name: 'Authenticate to Org'
+        run:  sfdx org:login:sfdx-url --sfdx-url-file ./env.sfdx --set-default
+      - name: 'Validate deployment'
+        run: |
+           testLevel=$TEST_LEVEL
+           if [ -z "$testLevel" ]; then
+             testLevel="RunAllTestsInOrg"
+           fi
+           echo "---- Test Level: $testLevel ----"
+        
+           sfdx project:deploy:start \
+             --manifest ./changed-sources/package/package.xml \
+             --post-destructive-changes ./changed-sources/destructiveChanges/destructiveChanges.xml \
+             --dry-run \
+             --ignore-warnings \
+             --test-level $testLevel \
+             --async \
+             --json | tee validation_result.json
+        
+           resultId=$(cat validation_result.json | jq --raw-output '.result.id')
+           if [ -z "$resultId" -o "$resultId" = "null" ]; then
+             echo "---- Missing validation result ID ----"
+             exit 1
+           fi
+           echo "---- Validation result ----"
+           sfdx project:deploy:resume --job-id $resultId
