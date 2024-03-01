@@ -6,5 +6,6 @@ public with sharing class ClassA {
     public static void print() {
         Account account = new Account(Name ='test');
         insert account;
+        String s;
     }
 }
