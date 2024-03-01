@@ -10,5 +10,6 @@ public with sharing class ClassA {
         insert account;
         String s;
         String s2;
+        System.debug(s2);
     }
 }
