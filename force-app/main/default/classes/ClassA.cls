@@ -8,5 +8,6 @@ public with sharing class ClassA {
         Integer i2=2;
         Account account = new Account(Name ='test');
         insert account;
+        String s;
     }
 }
