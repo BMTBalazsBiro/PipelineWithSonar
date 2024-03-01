@@ -9,5 +9,6 @@ public with sharing class ClassA {
         Account account = new Account(Name ='test');
         insert account;
         String s;
+        String s2;
     }
 }
